@@ -1,4 +1,4 @@
-package c;
+package w2.c;
 
 import java.util.ArrayList;
 import java.util.Collections;

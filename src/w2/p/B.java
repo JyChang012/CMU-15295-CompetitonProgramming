@@ -1,4 +1,4 @@
-package p;
+package w2.p;
 
 import java.util.*;
 
