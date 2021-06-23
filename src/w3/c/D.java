@@ -1,13 +1,13 @@
 package w3.c;
 
-import java.util.*;
+import java.util.Scanner;
 
 
 
 // write arraylist are expansive!!
 public class D {
     public static double calculateWeakness(double[] prefix, double x) {
-        // maximum subarrays
+        // maximum abs subarray
         double max = Double.MIN_VALUE, min = Double.MAX_VALUE;
         for (int i = 0; i < prefix.length; i++) {
             double val = prefix[i] - (i + 1) * x;
