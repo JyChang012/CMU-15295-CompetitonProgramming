@@ -1,9 +1,10 @@
 package w4.c;
 
+
 import java.util.Arrays;
 import java.util.Scanner;
 
-public class B {
+public class Bv2 {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         int n = scanner.nextInt(), k = scanner.nextInt();
@@ -20,22 +21,21 @@ public class B {
     }
 
 
-    private static void setConst(int[][][] arr, int n) {
-        for (int[][] c: arr)
-            for (int[] cc: c)
-                Arrays.fill(cc, n);
+    private static void setConst(int[][] arr) {
+        for (int[] c: arr)
+                Arrays.fill(c, -1);
     }
 
 
     private static void minDist(int n, int k, int[] locs) {
-        int[][][] cache = new int[n + 1][k + 2][n + 1];
-        int[][][] decision = new int[n + 1][k + 2][n + 1];
+        int[][] cache = new int[n + 1][k + 2];
+        int[][] decision = new int[n + 1][k + 2];
 
-        setConst(cache, -1);
-        setConst(decision, -1);
+        setConst(cache);
+        setConst(decision);
 
 
-        int ret = solve(n, k + 1, n, locs, cache, decision);
+        int ret = solve(n, k + 1, locs, cache, decision);
         /*
         for (int p = k - 1; p < n; p++) {
             ret = Math.min(ret, solve(n - 1, k, p, locs, cache));
@@ -48,7 +48,7 @@ public class B {
         int[] post = new int[k];
         int ii = 0, nn = n;
         for (int kk = k + 1; kk > 1; kk--) {
-            post[ii] = decision[nn][kk][nn];
+            post[ii] = decision[nn][kk];
             nn = post[ii];
             ii++;
         }
@@ -60,50 +60,37 @@ public class B {
     }
 
     /*
-    n: # of villages
+    n: # of villages and # of village with the rightmost post office
     k: # of post office
-    p: # of village with the rightmost post office
-    p <= n
      */
-    private static int solve(int n, int k, int p, int[] locs, int[][][] cache, int[][][] decision) {
-        if (cache[n][k][p] >= 0)
-            return cache[n][k][p];
+    private static int solve(int n, int k, int[] locs, int[][] cache, int[][] decision) {
+        if (cache[n][k] >= 0)
+            return cache[n][k];
 
         int ret = 0;
 
-        if (p < n) {
-            for (int i = p + 1; i <= n; i++)
-                ret += locs[i] - locs[p];
-            ret += solve(p, k, p, locs, cache, decision);
-        } else { // p == n
             if (k == 1) {
                 for (int i = 0; i < n; i++) {
-                    ret += locs[p] - locs[i];
+                    ret += locs[n] - locs[i];
                 }
             } else {
                 ret = Integer.MAX_VALUE;
                 int opt = 0;
-                for (int pp = k - 1; pp <= p - 1; pp++) {
+                for (int pp = k - 1; pp <= n - 1; pp++) {
                     int newRet = 0;
-                    for (int i = pp + 1; i <= p - 1; i++) {
-                        newRet += Math.min(locs[i] - locs[pp], locs[p] - locs[i]);  // TODO: use binary search to find the partition  point, dont need this loop any more!
+                    for (int i = pp + 1; i <= n - 1; i++) {
+                        newRet += Math.min(locs[i] - locs[pp], locs[n] - locs[i]);  // TODO: use binary search to find the partition  point, dont need this loop any more!
                     }
-                    newRet += solve(pp, k - 1, pp, locs, cache, decision);
+                    newRet += solve(pp, k - 1, locs, cache, decision);
                     if (newRet < ret) {
                         ret = newRet;
                         opt = pp;
                     }
                 }
-                decision[n][k][p] = opt;
+                decision[n][k] = opt;
             }
-        }
-        cache[n][k][p] = ret;
+
+        cache[n][k] = ret;
         return ret;
     }
 }
-
-
-/*
-comment: notice that solve() is always called with p == n, which shows that we could only recurse
-on n == p and k. See v2
- */

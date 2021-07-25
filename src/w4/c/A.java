@@ -5,6 +5,8 @@ import java.util.Scanner;
 
 // see notes
 
+// time O(L)
+
 public class A {
 
     public static int char2digit(char c) {
@@ -21,16 +23,6 @@ public class A {
                 last = cur;
         }
         return true;
-    }
-
-
-    public static long calculateRamp(int[] digits) {
-
-        long[][] cache = new long[digits.length][10];
-        for (long[] ca: cache)
-            Arrays.fill(ca, -1);
-
-        return solveUpperBound(digits.length - 1, 0, digits, cache);
     }
 
     public static long solve(int i, int d, long[][] cache) { // starting from 0
@@ -71,6 +63,10 @@ public class A {
         scanner.nextLine();
         StringBuilder out = new StringBuilder();
 
+        long[][] cache = new long[80][10];
+        for (long[] ca: cache)
+            Arrays.fill(ca, -1);
+
         for (int i = 0; i < n; i++) {
             char[] cA = scanner.nextLine().toCharArray();
             int[] digits = new int[cA.length];
@@ -79,7 +75,7 @@ public class A {
             }
 
             if (checkRamp(digits)) {
-                out.append(calculateRamp(digits));
+                out.append(solveUpperBound(digits.length - 1, 0, digits, cache));
             } else {
                 out.append(-1);
             }
