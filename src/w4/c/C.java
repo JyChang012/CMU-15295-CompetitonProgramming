@@ -12,6 +12,8 @@ import java.util.Scanner;
     4. go through row 2 and come back
  */
 
+// Note: Long[] is much slower (~40%) and uses (>=2 times) more space than long[]!!!
+
 
 public class C {
     public static void main(String[] args) {
@@ -25,9 +27,9 @@ public class C {
                 grid[r][c] = scanner.nextLong();
         }
 
-        Long[][] cache = new Long[column][5];
-        for (Long[] c: cache)
-            Arrays.fill(c, null);
+        long[][] cache = new long[column][5];
+        for (long[] c: cache)
+            Arrays.fill(c, Long.MIN_VALUE);
 
         long ret = solve(0, 0, grid, cache);
         System.out.print(ret);
@@ -35,8 +37,8 @@ public class C {
     }
 
 
-    private static long solve(int bar, int state, long[][] grid, Long[][] cache) {
-        if (cache[bar][state] != null) {
+    private static long solve(int bar, int state, long[][] grid, long[][] cache) {
+        if (cache[bar][state] != Long.MIN_VALUE) {
             return cache[bar][state];
         }
 
@@ -45,7 +47,6 @@ public class C {
         if (bar == grid[0].length - 1) {
             switch (state) {
                 case 3:
-                    ret = grid[1][bar - 1] + grid[2][bar - 1];
                 case 0:
                     ret += grid[0][bar];
                 case 1:
@@ -54,7 +55,7 @@ public class C {
                     ret += grid[2][bar];
                     break;
                 case 4:
-                    ret = Long.MIN_VALUE;
+                    ret = Long.MIN_VALUE;  // should never go there!! Note: if a small negative num was added to this, it would underflow to a large positive number, ruining the whole process!!
             }
         } else {
             switch (state) {
@@ -62,7 +63,7 @@ public class C {
                     ret = grid[0][bar] + solve(bar + 1, 0, grid, cache);
                     ret = Math.max(ret, grid[0][bar] + grid[1][bar] + solve(bar + 1, 1, grid, cache));
                     ret = Math.max(ret, grid[0][bar] + grid[1][bar] + grid[2][bar] + solve(bar + 1, 2, grid, cache));
-                    ret = Math.max(ret, grid[0][bar] + solve(bar + 1, 3, grid, cache));
+                    ret = Math.max(ret, grid[0][bar] + grid[1][bar] + grid[2][bar] + solve(bar + 1, 3, grid, cache));
                     break;
                 case 1:
                     ret = grid[1][bar] + solve(bar + 1, 1, grid, cache);
@@ -73,15 +74,17 @@ public class C {
                     ret = grid[2][bar] + solve(bar + 1, 2, grid, cache);
                     ret = Math.max(ret, grid[2][bar] + grid[1][bar] + solve(bar + 1, 1, grid, cache));
                     ret = Math.max(ret, grid[2][bar] + grid[1][bar] + grid[0][bar] + solve(bar + 1, 0, grid, cache));
-                    ret = Math.max(ret, grid[2][bar] + solve(bar + 1, 4, grid, cache));
+                    if (bar < grid[0].length - 2)
+                        ret = Math.max(ret, grid[2][bar] + grid[1][bar] + grid[0][bar] + solve(bar + 1, 4, grid, cache));
                     break;
                 case 3:
-                    ret = grid[0][bar] + grid[1][bar] + grid[1][bar - 1] + grid[2][bar - 1] + grid[2][bar] + solve(bar + 1, 2, grid, cache);  // go back immediately
-                    ret = Math.max(ret, grid[0][bar] + grid[1][bar - 1] + grid[2][bar - 1] + solve(bar + 1, 3, grid, cache));
+                    ret = grid[0][bar] + grid[1][bar] + grid[2][bar] + solve(bar + 1, 2, grid, cache);  // go back immediately
+                    ret = Math.max(ret, grid[0][bar] + grid[1][bar] + grid[2][bar] + solve(bar + 1, 3, grid, cache));
                     break;
                 case 4:
-                    ret = grid[2][bar] + grid[1][bar] + grid[1][bar - 1] + grid[0][bar - 1] + grid[0][bar] + solve(bar + 1, 0, grid, cache);
-                    ret = Math.max(ret, grid[2][bar] + grid[1][bar - 1] + grid[0][bar - 1] + solve(bar + 1, 4, grid, cache));
+                    ret = grid[2][bar] + grid[1][bar] + grid[0][bar] + solve(bar + 1, 0, grid, cache);
+                    if (bar < grid[0].length - 2)
+                        ret = Math.max(ret, grid[2][bar] + grid[1][bar] + grid[0][bar] + solve(bar + 1, 4, grid, cache));
             }
         }
 
