@@ -2,28 +2,21 @@ package w4.c;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Scanner;
 
+
+// Time limit exceeded on test 14
+
 public class D {
-    private static class Tree {
-        Node root = new Node();
-    }
 
     private static class Node {
-        ArrayList<Node> children = new ArrayList<>(10);
+        LinkedList<Node> children = new LinkedList<>();
         int id = 0;
         // int rightSiblingID = -1;
         int w;  // weight or tree cut each year
         int d;  // length to parent
-        Node parent;
-        /*
-        public Node getRightSibling() {
-            if (rightSiblingID > 0)
-                return parent.children.get(rightSiblingID);
-            else
-                return null;
-        }
-         */
+        int parentId;
 
         public void addChild(Node newChild) {
             // Node prevLastChild = children.get(children.size() - 1);
@@ -32,77 +25,68 @@ public class D {
         }
     }
 
-    /*
-    private static void calculateWeight(Node node) {
-        if (node.children.isEmpty()) {
-            return;
-        }
-
-        for (Node child: node.children) {
-            calculateWeight(child);
-            node.curW += child.curW + child.w;
-        }
-    }
-     */
-
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         int n = scanner.nextInt(), k = scanner.nextInt();
-        Tree tree = new Tree();
+        Node root = new Node();
         Node[] villages = new Node[n + 1];
-        villages[0] = tree.root;
+        villages[0] = root;
         for (int i = 1; i <= n; i++) {
             scanner.nextLine();
             Node village = new Node();
             villages[i] = village;
             village.id = i;
             village.w = scanner.nextInt();
-            village.parent = villages[scanner.nextInt()];
+            village.parentId = scanner.nextInt();
             village.d = scanner.nextInt();
-            village.parent.addChild(village);
+        }
+
+        for (int i = 1; i <= n; i++) {
+            villages[villages[i].parentId].addChild(villages[i]);
         }
 
         int[][] dist = new int[n + 1][n + 1];
         for (int[] c : dist)
             Arrays.fill(c, -1);
-        calDist(tree.root, dist);
+        calDist(root, dist, villages);
 
         int[][][] cache = new int[n + 1][n + 1][k + 1];
         for (int[][] c : cache)
             for (int[] cc : c)
                 Arrays.fill(cc, Integer.MIN_VALUE);
 
-        System.out.println(solve(tree.root, 0, k, dist, cache));
+        System.out.println(solve(root, 0, k, dist, cache));
 
     }
 
 
-    private static void calDist(Node root, int[][] dist) {
-        calDistFromSink(root, root, dist);
+    private static void calDist(Node root, int[][] dist, Node[] villages) {
+        calDistFromSink(root, root, dist, villages);
         for (Node child : root.children)
-            calDist(child, dist);
+            calDist(child, dist, villages);
     }
 
-    private static void calDistFromSink(Node sink, Node subtree, int[][] dist) {
+    private static void calDistFromSink(Node sink, Node subtree, int[][] dist, Node[] villages) {
         if (subtree.children.isEmpty())
             return;
 
         for (Node child : subtree.children) {
-            calDistBetween(sink, child, dist);
-            calDistFromSink(sink, child, dist);
+            calDistBetween(sink.id, child.id, dist, villages);
+            calDistFromSink(sink, child, dist, villages);
         }
     }
 
-    private static int calDistBetween(Node sink, Node source, int[][] dist) {
+    private static int calDistBetween(int sinkId, int sourceId, int[][] dist, Node[] villages) {
+        Node sink = villages[sinkId], source = villages[sourceId];
         if (dist[sink.id][source.id] >= 0)
             return dist[sink.id][source.id];
 
         int ret;
-        if (source.parent == sink) {
+        if (source.parentId == sinkId) {
             ret = source.d;
         } else {
-            ret = calDistBetween(sink, source.parent, dist) + source.d;
+            ret = calDistBetween(sinkId, source.parentId, dist, villages) + source.d;
 
         }
         dist[sink.id][source.id] = ret;
@@ -112,7 +96,7 @@ public class D {
 
 
     private static int variableNestedLoop(Node node, int lastMill, int childId, int left, int[][] dist, int[][][] cache) {
-        ArrayList<Node> children = node.children;
+        LinkedList<Node> children = node.children;
         int ret = Integer.MAX_VALUE;
         if (childId == children.size() - 1) {
             int min = Math.min(1, left);
