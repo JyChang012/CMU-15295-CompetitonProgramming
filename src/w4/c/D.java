@@ -2,16 +2,19 @@ package w4.c;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.Scanner;
 
 
-// Time limit exceeded on test 14
+// Time limit exceeded on test 14.
+
+// Problem of this implementation: the saved cache[n][k][m], which is the cost of subtree rooted at n, with nearest mill
+// at m and k additional mill to add, does not save the intermediate cost. The correct way is to save subtree rooted at
+// V, ignoring the first C children of V, given K additional sawmills to place and nearest mill at m.
 
 public class D {
 
     private static class Node {
-        LinkedList<Node> children = new LinkedList<>();
+        ArrayList<Node> children = new ArrayList<>();
         int id = 0;
         // int rightSiblingID = -1;
         int w;  // weight or tree cut each year
@@ -46,21 +49,21 @@ public class D {
             villages[villages[i].parentId].addChild(villages[i]);
         }
 
-        int[][] dist = new int[n + 1][n + 1];
-        for (int[] c : dist)
-            Arrays.fill(c, -1);
-        calDist(root, dist, villages);
+        // int[][] dist = new int[n + 1][n + 1];
+        // for (int[] c : dist)
+        //     Arrays.fill(c, -1);
+        // calDist(root, dist, villages);
 
         int[][][] cache = new int[n + 1][n + 1][k + 1];
         for (int[][] c : cache)
             for (int[] cc : c)
                 Arrays.fill(cc, Integer.MIN_VALUE);
 
-        System.out.println(solve(root, 0, k, dist, cache));
+        System.out.println(solve(root, 0, k, 0, cache));
 
     }
 
-
+    /*
     private static void calDist(Node root, int[][] dist, Node[] villages) {
         calDistFromSink(root, root, dist, villages);
         for (Node child : root.children)
@@ -94,14 +97,28 @@ public class D {
 
     }
 
+     */
 
-    private static int variableNestedLoop(Node node, int lastMill, int childId, int left, int[][] dist, int[][][] cache) {
-        LinkedList<Node> children = node.children;
+
+    private static int variableNestedLoop(Node node, int lastMill, int childId, int left, int dist, int[][][] cache) {
+        Node child = node.children.get(childId);
+        int childGlobalId = child.id;
+
+        ArrayList<Node> children = node.children;
         int ret = Integer.MAX_VALUE;
         if (childId == children.size() - 1) {
             int min = Math.min(1, left);
             for (int hasMill = 0; hasMill <= min; hasMill++) {
-                int newRet = solve(node.children.get(childId), hasMill == 1 ? node.children.get(childId).id : lastMill, left - hasMill, dist, cache);
+                int newLastMill, newDist;
+                if (hasMill == 1) {
+                    newLastMill = childGlobalId;
+                    newDist = 0;
+                } else {
+                    newLastMill = lastMill;
+                    newDist = dist + child.d;
+                }
+
+                int newRet = solve(child, newLastMill, left - hasMill, newDist, cache);
                 ret = Math.min(ret, newRet);
             }
 
@@ -110,7 +127,16 @@ public class D {
             for (int alloc = 0; alloc <= left; alloc++) {
                 int min = Math.min(1, alloc);
                 for (int hasMill = 0; hasMill <= min; hasMill++) {
-                    int newRet = solve(node.children.get(childId), hasMill == 1 ? node.children.get(childId).id : lastMill, alloc - hasMill, dist, cache);
+                    int newLastMill, newDist;
+                    if (hasMill == 1) {
+                        newLastMill = childGlobalId;
+                        newDist = 0;
+                    } else {
+                        newLastMill = lastMill;
+                        newDist = dist + child.d;
+                    }
+
+                    int newRet = solve(child, newLastMill, alloc - hasMill, newDist, cache);
                     newRet += variableNestedLoop(node, lastMill, childId + 1, left - alloc, dist, cache);
                     ret = Math.min(ret, newRet);
                 }
@@ -122,7 +148,7 @@ public class D {
 
     }
 
-    private static int solve(Node node, int lastMill, int k, int[][] dist, int[][][] cache) {
+    private static int solve(Node node, int lastMill, int k, int dist, int[][][] cache) {
         if (cache[node.id][lastMill][k] != Integer.MIN_VALUE)
             return cache[node.id][lastMill][k];
 
@@ -134,7 +160,7 @@ public class D {
         }
 
         if (node.id != lastMill)
-            ret += dist[lastMill][node.id] * node.w;
+            ret += dist * node.w;
 
         cache[node.id][lastMill][k] = ret;
         return ret;
