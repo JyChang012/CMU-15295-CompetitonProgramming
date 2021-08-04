@@ -3,7 +3,10 @@ package w5c;
 import java.io.*;
 import java.util.*;
 
-public class C {
+
+// bfs is actually not needed, 2 times faster
+
+public class Cv2 {
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
@@ -26,21 +29,21 @@ public class C {
 
         List<Integer> deleteList = new ArrayList<>();
 
-        // bfs
-        Queue<Integer> queue = new LinkedList<>();
-        queue.offer(root);
-        while (!queue.isEmpty()) {
-            int u = queue.poll();
+        for (int u = 0; u < n; u++) {
+            List<Integer> children = tree[u];
             boolean delete = !respect[u];
-
-            if (tree[u] != null)
-                for (int child: tree[u]) {
-                    if (respect[child])
+            if (children != null) {
+                for (int child: children) {
+                    if (respect[child]) {
                         delete = false;
-                    queue.add(child);
+                        break;
+                    }
                 }
-            if (delete)
+
+            }
+            if (delete) {
                 deleteList.add(u);
+            }
         }
 
         if (deleteList.isEmpty())
@@ -54,6 +57,5 @@ public class C {
         }
 
         writer.close();
-
     }
 }
