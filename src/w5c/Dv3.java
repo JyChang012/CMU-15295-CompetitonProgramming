@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.*;
 
 // try top down, passed
+// TODO: see solutions 2
 public class Dv3 {
 
     public static void main(String[] args) throws IOException {
